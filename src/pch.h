@@ -47,6 +47,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStandardPaths>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -68,12 +69,14 @@
 #include <toml++/toml.h>
 
 // windows
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Shlobj.h>
 #include <Windows.h>
 #include <fcntl.h>
 #include <io.h>
 #include <shellapi.h>
+#endif
 
 #undef _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #pragma warning(pop)

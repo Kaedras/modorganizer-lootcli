@@ -1,13 +1,12 @@
-#pragma comment(lib, "winhttp.lib")
-
 #include "lootthread.h"
 #include "game_settings.h"
 #include "version.h"
+#include <QStandardPaths>
 #include <codecvt>
+#include <curlpp/Easy.hpp>
+#include <curlpp/Options.hpp>
+#include <curlpp/cURLpp.hpp>
 #include <fstream>
-#include <strsafe.h>
-#include <windows.h>
-#include <winhttp.h>
 
 // using namespace loot;
 namespace fs = std::filesystem;
@@ -41,7 +40,10 @@ std::string toString(loot::MessageType type)
 LOOTWorker::LOOTWorker()
     : m_GameId(loot::GameId::tes5), m_GameName("Skyrim"),
       m_LogLevel(loot::LogLevel::info)
-{}
+{
+  // initialize curlpp, this must only be done once
+  cURLpp::initialize();
+}
 
 std::string ToLower(std::string text)
 {
@@ -73,12 +75,12 @@ void LOOTWorker::setGame(const std::string& gameName)
   }
 }
 
-void LOOTWorker::setGamePath(const std::string& gamePath)
+void LOOTWorker::setGamePath(const std::filesystem::path& gamePath)
 {
   m_GamePath = gamePath;
 }
 
-void LOOTWorker::setOutput(const std::string& outputPath)
+void LOOTWorker::setOutput(const std::filesystem::path& outputPath)
 {
   m_OutputPath = outputPath;
 }
@@ -88,7 +90,7 @@ void LOOTWorker::setUpdateMasterlist(bool update)
   m_UpdateMasterlist = update;
 }
 
-void LOOTWorker::setPluginListPath(const std::string& pluginListPath)
+void LOOTWorker::setPluginListPath(const std::filesystem::path& pluginListPath)
 {
   m_PluginListPath = pluginListPath;
 }
@@ -105,16 +107,10 @@ void LOOTWorker::setLogLevel(loot::LogLevel level)
 
 fs::path GetLOOTAppData()
 {
-  TCHAR path[MAX_PATH];
-
-  HRESULT res = ::SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr,
-                                  SHGFP_TYPE_CURRENT, path);
-
-  if (res == S_OK) {
-    return fs::path(path) / "LOOT";
-  } else {
-    return fs::path("");
-  }
+  QDir appData =
+      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first();
+  auto path = appData.filesystemPath();
+  return path / "LOOT";
 }
 
 fs::path LOOTWorker::gamePath() const
@@ -278,7 +274,8 @@ void LOOTWorker::getSettings(const fs::path& file)
   }
 }
 
-std::optional<std::string> LOOTWorker::GetLocalFolder(const toml::table& table)
+std::optional<std::filesystem::path>
+LOOTWorker::GetLocalFolder(const toml::table& table)
 {
   const auto localPath   = table["local_path"].value<std::string>();
   const auto localFolder = table["local_folder"].value<std::string>();
@@ -288,7 +285,7 @@ std::optional<std::string> LOOTWorker::GetLocalFolder(const toml::table& table)
   }
 
   if (localPath.has_value()) {
-    return std::filesystem::u8path(*localPath).filename().string();
+    return std::filesystem::u8path(*localPath).filename();
   }
 
   return std::nullopt;
@@ -326,7 +323,7 @@ bool LOOTWorker::IsNehrim(const toml::table& table)
 }
 
 bool LOOTWorker::IsEnderal(const toml::table& table,
-                           const std::string& expectedLocalFolder)
+                           const std::filesystem::path& expectedLocalFolder)
 {
   const auto installPath = table["path"].value<std::string>();
 
@@ -395,25 +392,25 @@ std::string LOOTWorker::getOldDefaultRepoUrl(loot::GameId GameId)
   }
 }
 
-bool LOOTWorker::isLocalPath(const std::string& location, const std::string& filename)
+bool LOOTWorker::isLocalPath(const std::filesystem::path& location,
+                             const std::filesystem::path& filename)
 {
-  if (boost::starts_with(location, "http://") ||
-      boost::starts_with(location, "https://")) {
+  if (location.string().starts_with("http://") ||
+      location.string().starts_with("https://")) {
     return false;
   }
 
   // Could be a local path. Only return true if it points to a non-bare
   // Git repository that currently has the given branch checked out and
   // the given filename exists in the repo root.
-  auto locationPath = std::filesystem::u8path(location);
 
-  auto filePath = locationPath / std::filesystem::u8path(filename);
+  auto filePath = location / filename;
 
   if (!std::filesystem::is_regular_file(filePath)) {
     return false;
   }
 
-  auto headFilePath = locationPath / ".git" / "HEAD";
+  auto headFilePath = location / ".git" / "HEAD";
 
   return std::filesystem::is_regular_file(headFilePath);
 }
@@ -522,128 +519,23 @@ std::string LOOTWorker::migrateMasterlistSource(const std::string& source)
   return source;
 }
 
-DWORD LOOTWorker::GetFile(const WCHAR* szUrl,      // Full URL
-                          const CHAR* szFileName)  // Local file name
+void LOOTWorker::GetFile(const char* szUrl,                        // Full URL
+                         const std::filesystem::path& szFileName)  // Local file name
 {
-  BYTE szTemp[25];
-  DWORD dwSize       = 0;
-  DWORD dwDownloaded = 0;
-  LPSTR pszOutBuffer;
-  BOOL bResults      = FALSE;
-  HINTERNET hSession = NULL, hConnect = NULL, hRequest = NULL;
-  FILE* pFile;
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  try {
+    std::ofstream ostream(szFileName);
 
-  URL_COMPONENTS urlComp;
-  DWORD dwUrlLen = 0;
+    cURLpp::Easy request;
 
-  DWORD result = ERROR_SUCCESS;
+    request.setOpt(cURLpp::Options::WriteStream(&ostream));
+    request.setOpt(cURLpp::Options::Url(szUrl));
+    request.setOpt(cURLpp::Options::UserAgent("lootcli/1.5.0"));
 
-  // Initialize the URL_COMPONENTS structure.
-  ZeroMemory(&urlComp, sizeof(urlComp));
-  urlComp.dwStructSize = sizeof(urlComp);
+    request.perform();
 
-  // Set required component lengths to non-zero
-  // so that they are cracked.
-  wchar_t szHostName[MAX_PATH]    = L"";
-  wchar_t szURLPath[MAX_PATH * 4] = L"";
-  urlComp.lpszHostName            = szHostName;
-  urlComp.lpszUrlPath             = szURLPath;
-  urlComp.dwSchemeLength          = (DWORD)-1;
-  urlComp.dwHostNameLength        = (DWORD)-1;
-  urlComp.dwUrlPathLength         = (DWORD)-1;
-  urlComp.dwExtraInfoLength       = (DWORD)-1;
-  if (WinHttpCrackUrl(szUrl, (DWORD)wcslen(szUrl), 0, &urlComp)) {
-    // Use WinHttpOpen to obtain a session handle.
-    hSession = WinHttpOpen(L"lootcli/1.5.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-                           WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-
-    // Specify an HTTP server.
-    if (hSession)
-      hConnect = WinHttpConnect(hSession, szHostName, urlComp.nPort, 0);
-
-    // Create an HTTP request handle.
-    if (hConnect)
-      hRequest =
-          WinHttpOpenRequest(hConnect, L"GET", szURLPath, NULL, WINHTTP_NO_REFERER,
-                             WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
-
-    // Send a request.
-    if (hRequest)
-      bResults = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                                    WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
-
-    // End the request.
-    if (bResults)
-      bResults = WinHttpReceiveResponse(hRequest, NULL);
-
-    // Keep checking for data until there is nothing left.
-    if (bResults) {
-      if (!(pFile = fopen(szFileName, "wb"))) {
-        log(loot::LogLevel::debug, "File open failure");
-        result = GetLastError();
-      }
-      do {
-        // Check for available data.
-        dwSize = 0;
-        if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
-          log(loot::LogLevel::debug, "No data");
-          result = GetLastError();
-          break;
-        }
-
-        // No more available data.
-        if (!dwSize) {
-          log(loot::LogLevel::debug, "No data");
-          result = GetLastError();
-          break;
-        }
-
-        // Allocate space for the buffer.
-        pszOutBuffer = new char[dwSize + 1];
-        if (!pszOutBuffer) {
-          log(loot::LogLevel::debug, "Bad buffer");
-          result = GetLastError();
-        }
-
-        // Read the Data.
-        ZeroMemory(pszOutBuffer, dwSize + 1);
-
-        if (!WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded)) {
-          log(loot::LogLevel::debug, "Read data failure");
-          result = GetLastError();
-        } else {
-          fwrite(pszOutBuffer, sizeof(char), dwSize, pFile);
-        }
-
-        // Free the memory allocated to the buffer.
-        delete[] pszOutBuffer;
-
-        // This condition should never be reached since WinHttpQueryDataAvailable
-        // reported that there are bits to read.
-        if (!dwDownloaded)
-          break;
-
-      } while (dwSize > 0);
-    } else {
-      log(loot::LogLevel::debug, "Response failure");
-      result = GetLastError();
-    }
-
-    // Close any open handles.
-    if (hRequest)
-      WinHttpCloseHandle(hRequest);
-    if (hConnect)
-      WinHttpCloseHandle(hConnect);
-    if (hSession)
-      WinHttpCloseHandle(hSession);
-    fflush(pFile);
-    fclose(pFile);
-  } else {
-    log(loot::LogLevel::debug, "URL parse failure: " + converter.to_bytes(szUrl));
-    result = GetLastError();
+  } catch (...) {
+    throw;
   }
-  return result;
 }
 
 std::string escape(const std::string& s)
@@ -685,7 +577,7 @@ int LOOTWorker::run()
     m_GameSettings.SetGamePath(m_GamePath);
 
     std::unique_ptr<loot::GameInterface> gameHandle = CreateGameHandle(
-        m_GameSettings.Type(), m_GameSettings.GamePath(), profile.string());
+        m_GameSettings.Type(), m_GameSettings.GamePath(), profile);
 
     if (!GetLOOTAppData().empty()) {
       // Make sure that the LOOT game path exists.
@@ -698,7 +590,7 @@ int LOOTWorker::run()
         }
 
         std::vector<fs::path> legacyGamePaths{GetLOOTAppData() /
-                                              fs::path(m_GameSettings.FolderName())};
+                                              m_GameSettings.FolderName()};
 
         if (m_GameSettings.Id() == loot::GameId::tes5se) {
           // LOOT v0.10.0 used SkyrimSE as its folder name for Skyrim SE, so
@@ -741,48 +633,24 @@ int LOOTWorker::run()
       }
 
       progress(Progress::UpdatingMasterlist);
-      std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-      std::wstring masterlistSource =
-          converter.from_bytes(m_GameSettings.MasterlistSource());
 
       log(loot::LogLevel::info, "Downloading latest masterlist file from " +
                                     m_GameSettings.MasterlistSource() + " to " +
                                     masterlistPath().string());
-      DWORD result =
-          GetFile(masterlistSource.c_str(), masterlistPath().string().c_str());
-      if (result != ERROR_SUCCESS) {
-        LPVOID lpMsgBuf;
-        LPVOID lpDisplayBuf;
-        LPCWSTR lpszFunction = TEXT("GetFile");
-        DWORD dw             = result;
-
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                          FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR)&lpMsgBuf, 0, NULL);
-
-        lpDisplayBuf =
-            (LPVOID)LocalAlloc(LMEM_ZEROINIT, (lstrlen((LPCTSTR)lpMsgBuf) +
-                                               lstrlen((LPCTSTR)lpszFunction) + 40) *
-                                                  sizeof(TCHAR));
-        StringCchPrintf((LPTSTR)lpDisplayBuf, LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-                        TEXT("%s failed with error %d: %s"), lpszFunction, dw,
-                        lpMsgBuf);
-
-        std::wstring errorMessage = (LPTSTR)lpDisplayBuf;
-
-        log(loot::LogLevel::error,
-            "Error downloading masterlist: " + converter.to_bytes(errorMessage));
-        return FALSE;
+      try {
+        GetFile(m_GameSettings.MasterlistSource().c_str(),
+                masterlistPath());
+      } catch (const std::exception& ex) {
+        log(loot::LogLevel::error, std::format("GetFile failed: {}", ex.what()));
+        return 1;
       }
     }
 
     progress(Progress::LoadingLists);
 
     fs::path userlist = userlistPath();
-    gameHandle->GetDatabase().LoadLists(masterlistPath().string(),
-                                        fs::exists(userlist) ? userlistPath().string()
-                                                             : fs::path());
+    gameHandle->GetDatabase().LoadLists(
+        masterlistPath(), fs::exists(userlist) ? userlistPath() : fs::path());
 
     progress(Progress::ReadingPlugins);
     gameHandle->LoadCurrentLoadOrderState();
@@ -800,7 +668,7 @@ int LOOTWorker::run()
     std::ofstream outf(m_PluginListPath);
     if (!outf) {
       log(loot::LogLevel::error,
-          "failed to open " + m_PluginListPath + " to rewrite it");
+          std::format("failed to open {} to rewrite it", m_PluginListPath.string()));
       return 1;
     }
     outf << "# This file was automatically generated by Mod Organizer." << std::endl;
@@ -853,9 +721,9 @@ LOOTWorker::createJsonReport(loot::GameInterface& game,
   const auto end = std::chrono::high_resolution_clock::now();
 
   set(root, "stats",
-      QJsonObject{{"time", std::chrono::duration_cast<std::chrono::milliseconds>(
-                               end - m_startTime)
-                               .count()},
+      QJsonObject{{"time", qint64(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      end - m_startTime)
+                                      .count())},
                   {"lootcliVersion", LOOTCLI_VERSION_STRING},
                   {"lootVersion", QString::fromStdString(loot::GetLiblootVersion())}});
 

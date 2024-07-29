@@ -1,5 +1,8 @@
 #include "game_settings.h"
 
+#include <QStandardPaths>
+#include <utility>
+
 namespace fs = std::filesystem;
 namespace loot
 {
@@ -71,7 +74,7 @@ float GetMinimumHeaderVersion(const GameId gameId)
   }
 }
 
-std::string GetPluginsFolderName(GameId gameId)
+std::filesystem::path GetPluginsFolderName(GameId gameId)
 {
   switch (gameId) {
   case GameId::tes3:
@@ -134,7 +137,7 @@ bool SupportsLightPlugins(const GameType gameType)
          gameType == GameType::fo4 || gameType == GameType::fo4vr;
 }
 
-std::string GetMasterFilename(const GameId gameId)
+std::filesystem::path GetMasterFilename(const GameId gameId)
 {
   switch (gameId) {
   case GameId::tes3:
@@ -242,11 +245,12 @@ std::string GetDefaultMasterlistUrl(const GameId gameId)
   return GetDefaultMasterlistUrl(repoName);
 }
 
-GameSettings::GameSettings(const GameId gameId, const std::string& lootFolder)
+GameSettings::GameSettings(const GameId gameId, std::filesystem::path lootFolder)
     : id_(gameId), type_(GetGameType(gameId)), name_(GetGameName(gameId)),
       masterFile_(GetMasterFilename(gameId)),
       minimumHeaderVersion_(GetMinimumHeaderVersion(gameId)),
-      lootFolderName_(lootFolder), masterlistSource_(GetDefaultMasterlistUrl(gameId))
+      lootFolderName_(std::move(lootFolder)),
+      masterlistSource_(GetDefaultMasterlistUrl(gameId))
 {}
 
 bool GameSettings::operator==(const GameSettings& rhs) const
@@ -269,12 +273,12 @@ std::string GameSettings::Name() const
   return name_;
 }
 
-std::string GameSettings::FolderName() const
+std::filesystem::path GameSettings::FolderName() const
 {
   return lootFolderName_;
 }
 
-std::string GameSettings::Master() const
+std::filesystem::path GameSettings::Master() const
 {
   return masterFile_;
 }
@@ -310,7 +314,7 @@ GameSettings& GameSettings::SetName(const std::string& name)
   return *this;
 }
 
-GameSettings& GameSettings::SetMaster(const std::string& masterFile)
+GameSettings& GameSettings::SetMaster(const std::filesystem::path& masterFile)
 {
   masterFile_ = masterFile;
   return *this;
@@ -340,19 +344,12 @@ GameSettings& GameSettings::SetGameLocalPath(const std::filesystem::path& path)
   return *this;
 }
 
-GameSettings& GameSettings::SetGameLocalFolder(const std::string& folderName)
+GameSettings& GameSettings::SetGameLocalFolder(const std::filesystem::path& folderName)
 {
-  TCHAR path[MAX_PATH];
-
-  HRESULT res = ::SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr,
-                                  SHGFP_TYPE_CURRENT, path);
-  fs::path appData;
-  if (res == S_OK) {
-    appData = fs::path(path);
-  } else {
-    appData = fs::path("");
-  }
-  gameLocalPath_ = appData / fs::path(folderName);
+  QDir appData =
+      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first();
+  auto appDataPath = appData.filesystemPath();
+  gameLocalPath_   = appDataPath / fs::path(folderName);
   return *this;
 }
 }  // namespace loot

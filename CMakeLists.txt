@@ -4,6 +4,13 @@ include(CMakePackageConfigHelpers)
 
 project(lootcli)
 
+# set compiler threads to host core count
+if (NOT CMAKE_BUILD_PARALLEL_LEVEL)
+	include(ProcessorCount)
+	ProcessorCount(HOST_PROC_COUNT)
+	set(CMAKE_BUILD_PARALLEL_LEVEL ${HOST_PROC_COUNT})
+endif ()
+
 add_subdirectory(src)
 
 # install the header helper

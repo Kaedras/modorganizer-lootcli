@@ -14,7 +14,7 @@ namespace loot
 constexpr inline std::string_view NEHRIM_STEAM_REGISTRY_KEY =
     "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App "
     "1014940\\InstallLocation";
-static constexpr const char* DEFAULT_MASTERLIST_BRANCH = "v0.21";
+static constexpr const char* DEFAULT_MASTERLIST_BRANCH = "v0.23";
 
 enum struct GameId : uint8_t
 {
@@ -37,13 +37,13 @@ GameType GetGameType(const GameId gameId);
 
 float GetMinimumHeaderVersion(const GameId gameId);
 
-std::string GetPluginsFolderName(GameId gamiId);
+std::filesystem::path GetPluginsFolderName(GameId gamiId);
 
 std::string ToString(const GameId gameId);
 
 bool SupportsLightPlugins(const GameType gameType);
 
-std::string GetMasterFilename(const GameId gameId);
+std::filesystem::path GetMasterFilename(const GameId gameId);
 
 std::string GetGameName(const GameId gameId);
 
@@ -56,15 +56,15 @@ class GameSettings
 {
 public:
   GameSettings() = default;
-  explicit GameSettings(const GameId gameId, const std::string& lootFolder = "");
+  explicit GameSettings(const GameId gameId, std::filesystem::path  lootFolder = "");
 
   bool operator==(const GameSettings& rhs) const;  // Compares names and folder names.
 
   GameId Id() const;
   GameType Type() const;
   std::string Name() const;  // Returns the game's name, eg. "TES IV: Oblivion".
-  std::string FolderName() const;
-  std::string Master() const;
+  std::filesystem::path FolderName() const;
+  std::filesystem::path Master() const;
   float MinimumHeaderVersion() const;
   std::string MasterlistSource() const;
   std::filesystem::path GamePath() const;
@@ -72,21 +72,21 @@ public:
   std::filesystem::path DataPath() const;
 
   GameSettings& SetName(const std::string& name);
-  GameSettings& SetMaster(const std::string& masterFile);
+  GameSettings& SetMaster(const std::filesystem::path& masterFile);
   GameSettings& SetMinimumHeaderVersion(float minimumHeaderVersion);
   GameSettings& SetMasterlistSource(const std::string& source);
   GameSettings& SetGamePath(const std::filesystem::path& path);
   GameSettings& SetGameLocalPath(const std::filesystem::path& GameLocalPath);
-  GameSettings& SetGameLocalFolder(const std::string& folderName);
+  GameSettings& SetGameLocalFolder(const std::filesystem::path& folderName);
 
 private:
   GameId id_{GameId::tes4};
   GameType type_{GameType::tes4};
   std::string name_;
-  std::string masterFile_;
+  std::filesystem::path masterFile_;
   float minimumHeaderVersion_{0.0f};
 
-  std::string lootFolderName_;
+  std::filesystem::path lootFolderName_;
 
   std::string masterlistSource_;
 

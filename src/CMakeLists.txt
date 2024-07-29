@@ -9,8 +9,16 @@ if (Qt6_FOUND)
 
 message(STATUS "Qt6 found, building lootcli executable")
 
+if(UNIX)
+	find_package(ICU REQUIRED COMPONENTS data uc)
+	find_package(TBB REQUIRED)
+	find_package(spdlog CONFIG REQUIRED)
+	find_package(yaml-cpp CONFIG REQUIRED)
+endif()
+
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)
+find_package(unofficial-curlpp CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
 
 # avoid CMake error/warning
@@ -18,6 +26,12 @@ set_target_properties(libloot::loot PROPERTIES
   MAP_IMPORTED_CONFIG_RELEASE RelWithDebInfo
   MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
 )
+
+if(WIN32)
+	set(OS_SPECIFIC_DIR win32)
+else()
+	set(OS_SPECIFIC_DIR linux)
+endif()
 
 add_executable(lootcli WIN32)
 set_target_properties(lootcli PROPERTIES
@@ -29,7 +43,7 @@ target_sources(lootcli
 		game_settings.h
 		lootthread.cpp
 		lootthread.h
-		main.cpp
+		${OS_SPECIFIC_DIR}/main.cpp
 		pch.h
 		version.h
 		version.rc
@@ -38,9 +52,11 @@ target_sources(lootcli
 target_compile_definitions(lootcli PRIVATE _UNICODE UNICODE)
 target_include_directories(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 target_precompile_headers(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
+
 target_link_libraries(lootcli
     PRIVATE libloot::loot Boost::headers Boost::locale
-	tomlplusplus::tomlplusplus Qt6::Core)
+	tomlplusplus::tomlplusplus Qt6::Core unofficial::curlpp::curlpp)
+
 
 if (MSVC)
 	target_compile_options(lootcli
@@ -56,6 +72,12 @@ if (MSVC)
 	)
 
 	set_target_properties(lootcli PROPERTIES VS_STARTUP_PROJECT lootcli)
+else()
+	target_compile_options(lootcli
+		PRIVATE
+		"-Wall"
+		"-Wextra"
+	)
 endif()
 
 install(FILES
