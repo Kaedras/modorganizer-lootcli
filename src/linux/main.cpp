@@ -6,24 +6,22 @@ using namespace std;
 template <typename T>
 T getParameter(const std::vector<std::string>& arguments, const std::string& key)
 {
-  auto iter = std::find(arguments.begin(), arguments.end(), std::string("--") + key);
+  auto iter = ranges::find(arguments, std::string("--") + key);
   if ((iter != arguments.end()) && ((iter + 1) != arguments.end())) {
     return boost::lexical_cast<T>(*(iter + 1));
-  } else {
-    throw std::runtime_error(std::string("argument missing " + key));
   }
+  throw std::runtime_error(std::string("argument missing " + key));
 }
 
 template <>
 bool getParameter<bool>(const std::vector<std::string>& arguments,
                         const std::string& key)
 {
-  auto iter = std::find(arguments.begin(), arguments.end(), std::string("--") + key);
+  auto iter = ranges::find(arguments, std::string("--") + key);
   if (iter != arguments.end()) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 template <typename T>

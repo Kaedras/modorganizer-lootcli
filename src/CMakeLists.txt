@@ -9,7 +9,7 @@ if (Qt6_FOUND)
 
 message(STATUS "Qt6 found, building lootcli executable")
 
-if(UNIX)
+if (UNIX)
 	find_package(ICU REQUIRED COMPONENTS data uc)
 	find_package(TBB REQUIRED)
 	find_package(spdlog CONFIG REQUIRED)
@@ -27,7 +27,7 @@ set_target_properties(libloot::loot PROPERTIES
   MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
 )
 
-if(WIN32)
+if (WIN32)
 	set(OS_SPECIFIC_DIR win32)
 else()
 	set(OS_SPECIFIC_DIR linux)
