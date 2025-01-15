@@ -14,7 +14,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/Kaedras/vcpkg-registry",
-      "baseline": "9127c3a3b30d4cf9bf77c691251fa735d1a1dd27",
+      "baseline": "fd5a0e4f36768f32af393dd731ca8d4620f3bbc6",
       "packages": ["libloot"]
     }
   ]
