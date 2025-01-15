@@ -1,4 +1,7 @@
-#pragma warning(disable : 4251)  // neds to have dll-interface
+#ifndef PCH_H
+#define PCH_H
+
+#pragma warning(disable : 4251)  // needs to have dll-interface
 #pragma warning(disable : 4355)  // this used in initializer list
 #pragma warning(disable : 4371)  // layout may have changed
 #pragma warning(disable : 4514)  // unreferenced inline function removed
@@ -80,3 +83,5 @@
 
 #undef _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #pragma warning(pop)
+
+#endif // PCH_H
