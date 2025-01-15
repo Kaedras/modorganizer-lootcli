@@ -5,11 +5,5 @@
     "libloot",
     "tomlplusplus",
     "yaml-cpp"
-  ],
-  "overrides": [
-    {
-      "name": "tomlplusplus",
-      "version": "3.1.0"
-    }
   ]
 }
