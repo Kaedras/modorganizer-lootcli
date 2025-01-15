@@ -15,8 +15,7 @@ if (UNIX)
 	find_package(yaml-cpp CONFIG REQUIRED)
 endif()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(tomlplusplus REQUIRED IMPORTED_TARGET tomlplusplus)
+find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)
 find_package(unofficial-curlpp CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
@@ -58,7 +57,8 @@ target_precompile_headers(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
 
 target_link_libraries(lootcli
     PRIVATE libloot::loot Boost::headers Boost::locale
-	PkgConfig::tomlplusplus Qt6::Core unofficial::curlpp::curlpp)
+	tomlplusplus::tomlplusplus Qt6::Core unofficial::curlpp::curlpp)
+
 
 if (MSVC)
 	target_compile_options(lootcli
