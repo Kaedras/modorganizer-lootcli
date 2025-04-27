@@ -342,17 +342,10 @@ GameSettings& GameSettings::SetGameLocalPath(const std::filesystem::path& path)
 
 GameSettings& GameSettings::SetGameLocalFolder(const std::string& folderName)
 {
-  TCHAR path[MAX_PATH];
-
-  HRESULT res = ::SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr,
-                                  SHGFP_TYPE_CURRENT, path);
-  fs::path appData;
-  if (res == S_OK) {
-    appData = fs::path(path);
-  } else {
-    appData = fs::path("");
-  }
-  gameLocalPath_ = appData / fs::path(folderName);
+  QDir appData =
+      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first();
+  auto appDataPath = appData.filesystemPath();
+  gameLocalPath_   = appDataPath / fs::path(folderName);
   return *this;
 }
 }  // namespace loot

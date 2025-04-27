@@ -1,4 +1,4 @@
-#include "lootthread.h"
+#include "../lootthread.h"
 #include <lootcli/lootcli.h>
 
 using namespace std;

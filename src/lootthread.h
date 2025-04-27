@@ -4,6 +4,11 @@
 #include "game_settings.h"
 #include <lootcli/lootcli.h>
 
+#include <QJsonValue>
+#include <loot/enum/log_level.h>
+#include <loot/game_interface.h>
+#include <mutex>
+
 namespace loot
 {
 class Game;
@@ -37,7 +42,7 @@ private:
   void progress(Progress p);
   void log(loot::LogLevel level, const std::string& message) const;
 
-  DWORD GetFile(const WCHAR* szUrl, const CHAR* szFileName);
+  void GetFile(const char* szUrl, const std::filesystem::path& szFileName);
   void getSettings(const std::filesystem::path& file);
   std::string getOldDefaultRepoUrl(loot::GameId gameType);
   std::optional<std::string> GetLocalFolder(const toml::table& table);
