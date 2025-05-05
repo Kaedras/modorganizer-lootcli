@@ -629,12 +629,17 @@ int LOOTWorker::run()
       std::locale::global(gen(m_Language + ".UTF-8"));
     }
 
-    if (true) {
-      progress(Progress::CheckingMasterlistExistence);
-      if (!fs::exists(masterlistPath())) {
-        fs::create_directories(masterlistPath().parent_path());
+    progress(Progress::CheckingMasterlistExistence);
+    if (!fs::exists(masterlistPath())) {
+      if (!m_UpdateMasterlist) {
+        log(loot::LogLevel::error,
+            "Masterlist not found at: " + masterlistPath().string());
+        return FALSE;
       }
+      fs::create_directories(masterlistPath().parent_path());
+    }
 
+    if (m_UpdateMasterlist) {
       progress(Progress::UpdatingMasterlist);
 
       log(loot::LogLevel::info, "Downloading latest masterlist file from " +
