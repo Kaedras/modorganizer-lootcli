@@ -634,7 +634,7 @@ int LOOTWorker::run()
       if (!m_UpdateMasterlist) {
         log(loot::LogLevel::error,
             "Masterlist not found at: " + masterlistPath().string());
-        return FALSE;
+        return 1;
       }
       fs::create_directories(masterlistPath().parent_path());
     }
