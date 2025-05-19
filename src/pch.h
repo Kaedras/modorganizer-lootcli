@@ -66,9 +66,8 @@
 #include <loot/enum/game_type.h>
 
 // third-party
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-#include <curlpp/cURLpp.hpp>
+#include <curl/curl.h>
+#include <curl/easy.h>
 #include <toml++/toml.h>
 
 // windows

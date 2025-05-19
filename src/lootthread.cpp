@@ -6,9 +6,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QStandardPaths>
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-#include <curlpp/cURLpp.hpp>
+#include <curl/easy.h>
 #include <fstream>
 #include <iostream>
 #include <toml++/toml.h>
@@ -45,10 +43,7 @@ std::string toString(loot::MessageType type)
 LOOTWorker::LOOTWorker()
     : m_GameId(loot::GameId::tes5), m_GameName("Skyrim"),
       m_LogLevel(loot::LogLevel::info)
-{
-  // initialize curlpp, this must only be done once
-  cURLpp::initialize();
-}
+{}
 
 std::string ToLower(std::string text)
 {
@@ -522,22 +517,60 @@ std::string LOOTWorker::migrateMasterlistSource(const std::string& source)
   return source;
 }
 
+// executes the given function in the destructor
+//
+template <class F>
+class guard
+{
+public:
+  guard(F f) : f_(f) {}
+
+  ~guard() { f_(); }
+
+private:
+  F f_;
+};
+
 void LOOTWorker::GetFile(const char* szUrl,                        // Full URL
                          const std::filesystem::path& szFileName)  // Local file name
 {
-  try {
-    std::ofstream ostream(szFileName);
+  std::ofstream outFile(szFileName, std::ios::binary);
+  if (!outFile) {
+    throw std::runtime_error("Failed to open output file: " + szFileName.string());
+  }
 
-    cURLpp::Easy request;
+  CURL* curl = curl_easy_init();
+  if (!curl) {
+    throw std::runtime_error("Failed to initialize curl");
+  }
 
-    request.setOpt(cURLpp::Options::WriteStream(&ostream));
-    request.setOpt(cURLpp::Options::Url(szUrl));
-    request.setOpt(cURLpp::Options::UserAgent("lootcli/1.5.0"));
+  guard g([curl]() {
+    curl_easy_cleanup(curl);
+  });
 
-    request.perform();
+  curl_easy_setopt(curl, CURLOPT_URL, szUrl);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
+                   [](void* ptr, size_t size, size_t n, void* stream) {
+                     auto outFile = static_cast<std::ofstream*>(stream);
+                     outFile->write(static_cast<char*>(ptr), size * n);
+                     return size * n;
+                   });
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outFile);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, "lootcli/1.5.0");
 
-  } catch (...) {
-    throw;
+  CURLcode res = curl_easy_perform(curl);
+
+  if (res != CURLE_OK) {
+    throw std::runtime_error(std::string("Download failed: ") +
+                             curl_easy_strerror(res));
+  }
+
+  long responseCode;
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+  if (responseCode != 200) {
+    throw std::runtime_error("Download failed with code " +
+                             std::to_string(responseCode));
   }
 }
 
@@ -648,7 +681,8 @@ int LOOTWorker::run()
       try {
         GetFile(m_GameSettings.MasterlistSource().c_str(), masterlistPath());
       } catch (const std::exception& ex) {
-        log(loot::LogLevel::error, std::format("Error downloading masterlist: {}", ex.what()));
+        log(loot::LogLevel::error,
+            std::format("Error downloading masterlist: {}", ex.what()));
         return 1;
       }
     }
