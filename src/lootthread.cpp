@@ -113,8 +113,8 @@ void LOOTWorker::setLogLevel(loot::LogLevel level)
 fs::path GetLOOTAppData()
 {
   QDir appData =
-      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).first();
-  auto path = appData.filesystemPath();
+      QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation).first();
+  auto path = appData.filesystemAbsolutePath();
   return path / "LOOT";
 }
 
