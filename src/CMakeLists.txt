@@ -13,5 +13,5 @@ mo2_install_target(lootcli INSTALLDIR bin/loot)
 
 if (UNIX)
 	# set runtime path to "."
-	target_compile_options(lootcli PRIVATE "-Wl,-R,.")
+	set_target_properties(lootcli PROPERTIES INSTALL_RPATH .)
 endif()
