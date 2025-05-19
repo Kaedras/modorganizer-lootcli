@@ -648,7 +648,7 @@ int LOOTWorker::run()
       try {
         GetFile(m_GameSettings.MasterlistSource().c_str(), masterlistPath());
       } catch (const std::exception& ex) {
-        log(loot::LogLevel::error, std::format("GetFile failed: {}", ex.what()));
+        log(loot::LogLevel::error, std::format("Error downloading masterlist: {}", ex.what()));
         return 1;
       }
     }
