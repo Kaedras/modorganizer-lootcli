@@ -534,29 +534,25 @@ private:
 void LOOTWorker::GetFile(const char* szUrl,                        // Full URL
                          const std::filesystem::path& szFileName)  // Local file name
 {
-  std::ofstream outFile(szFileName, std::ios::binary);
-  if (!outFile) {
+  FILE* file = fopen(szFileName.string().c_str(), "wb");
+  if (!file) {
     throw std::runtime_error("Failed to open output file: " + szFileName.string());
   }
+  guard fileGuard([file] {
+    fclose(file);
+  });
 
   CURL* curl = curl_easy_init();
   if (!curl) {
     throw std::runtime_error("Failed to initialize curl");
   }
-
-  guard g([curl]() {
+  guard curlGuard([curl] {
     curl_easy_cleanup(curl);
   });
 
   curl_easy_setopt(curl, CURLOPT_URL, szUrl);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
-                   [](void* ptr, size_t size, size_t n, void* stream) {
-                     auto outFile = static_cast<std::ofstream*>(stream);
-                     outFile->write(static_cast<char*>(ptr), size * n);
-                     return size * n;
-                   });
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outFile);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "lootcli/1.5.0");
 
   CURLcode res = curl_easy_perform(curl);
