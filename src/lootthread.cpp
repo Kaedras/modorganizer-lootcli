@@ -693,10 +693,14 @@ int LOOTWorker::run()
 
     progress(Progress::ReadingPlugins);
     gameHandle->LoadCurrentLoadOrderState();
-    std::vector<std::string> pluginsList;
-    for (const auto& plugin : gameHandle->GetLoadOrder()) {
-      pluginsList.push_back(plugin);
+    std::vector<std::string> pluginsList = gameHandle->GetLoadOrder();
+
+    std::vector<std::filesystem::path> pluginPaths;
+    pluginPaths.reserve(pluginsList.size());
+    for (const auto& plugin : pluginsList) {
+      pluginPaths.emplace_back(m_GameSettings.DataPath() / plugin);
     }
+    gameHandle->LoadPlugins(pluginPaths, false);
 
     progress(Progress::SortingPlugins);
     std::vector<std::string> sortedPlugins = gameHandle->SortPlugins(pluginsList);
