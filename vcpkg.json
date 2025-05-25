@@ -22,7 +22,7 @@
       {
         "kind": "git",
         "repository": "https://github.com/ModOrganizer2/vcpkg-registry",
-        "baseline": "14e24beaf47774d19e4f16ed757e257124e69e9f",
+        "baseline": "8beb2e0efa9c17dd6d17bb05288dd1e40727f673",
         "packages": ["libloot"]
       }
     ]
