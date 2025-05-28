@@ -13,6 +13,6 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Build LootCLI
-        uses: ModOrganizer2/build-with-mob-action@dev/vcpkg
+        uses: ModOrganizer2/build-with-mob-action@master
         with:
           mo2-dependencies: cmake_common
