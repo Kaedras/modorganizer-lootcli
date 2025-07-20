@@ -16,9 +16,9 @@ using std::recursive_mutex;
 
 namespace lootcli
 {
-static const std::set<std::string> oldDefaultBranches({"master", "v0.7", "v0.8",
-                                                       "v0.10", "v0.13", "v0.14",
-                                                       "v0.15", "v0.17", "v0.18"});
+static const std::set<std::string>
+    oldDefaultBranches({"master", "v0.7", "v0.8", "v0.10", "v0.13", "v0.14", "v0.15",
+                        "v0.17", "v0.18", "v0.21"});
 static const std::regex GITHUB_REPO_URL_REGEX =
     std::regex(R"(^https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$)",
                std::regex::ECMAScript | std::regex::icase);
@@ -57,13 +57,20 @@ std::string ToLower(std::string text)
 void LOOTWorker::setGame(const std::string& gameName)
 {
   static std::map<std::string, loot::GameId> gameMap = {
-      {"morrowind", loot::GameId::tes3},     {"oblivion", loot::GameId::tes4},
-      {"fallout3", loot::GameId::fo3},       {"fallout4", loot::GameId::fo4},
-      {"fallout4vr", loot::GameId::fo4vr},   {"falloutnv", loot::GameId::fonv},
-      {"skyrim", loot::GameId::tes5},        {"skyrimse", loot::GameId::tes5se},
-      {"skyrimvr", loot::GameId::tes5vr},    {"nehrim", loot::GameId::nehrim},
-      {"enderal", loot::GameId::enderal},    {"enderalse", loot::GameId::enderalse},
-      {"starfield", loot::GameId::starfield}};
+      {"morrowind", loot::GameId::tes3},
+      {"oblivion", loot::GameId::tes4},
+      {"fallout3", loot::GameId::fo3},
+      {"fallout4", loot::GameId::fo4},
+      {"fallout4vr", loot::GameId::fo4vr},
+      {"falloutnv", loot::GameId::fonv},
+      {"skyrim", loot::GameId::tes5},
+      {"skyrimse", loot::GameId::tes5se},
+      {"skyrimvr", loot::GameId::tes5vr},
+      {"nehrim", loot::GameId::nehrim},
+      {"enderal", loot::GameId::enderal},
+      {"enderalse", loot::GameId::enderalse},
+      {"starfield", loot::GameId::starfield},
+      {"oblivionremastered", loot::GameId::oblivionRemastered}};
 
   auto iter = gameMap.find(ToLower(gameName));
 
@@ -75,12 +82,12 @@ void LOOTWorker::setGame(const std::string& gameName)
   }
 }
 
-void LOOTWorker::setGamePath(const std::filesystem::path& gamePath)
+void LOOTWorker::setGamePath(const std::string& gamePath)
 {
   m_GamePath = gamePath;
 }
 
-void LOOTWorker::setOutput(const std::filesystem::path& outputPath)
+void LOOTWorker::setOutput(const std::string& outputPath)
 {
   m_OutputPath = outputPath;
 }
@@ -90,7 +97,7 @@ void LOOTWorker::setUpdateMasterlist(bool update)
   m_UpdateMasterlist = update;
 }
 
-void LOOTWorker::setPluginListPath(const std::filesystem::path& pluginListPath)
+void LOOTWorker::setPluginListPath(const std::string& pluginListPath)
 {
   m_PluginListPath = pluginListPath;
 }
@@ -193,6 +200,12 @@ void LOOTWorker::getSettings(const fs::path& file)
           gameId = GameId::fo4;
         } else if (gameType == "Fallout4VR") {
           gameId = GameId::fo4vr;
+        } else if (gameType == "Starfield") {
+          gameId = GameId::starfield;
+        } else if (gameType == "OpenMW") {
+          gameId = GameId::openmw;
+        } else if (gameType == "Oblivion Remastered") {
+          gameId = GameId::oblivionRemastered;
         } else {
           throw std::runtime_error(
               "invalid value for 'type' key in game settings table");
@@ -274,8 +287,7 @@ void LOOTWorker::getSettings(const fs::path& file)
   }
 }
 
-std::optional<std::filesystem::path>
-LOOTWorker::GetLocalFolder(const toml::table& table)
+std::optional<std::string> LOOTWorker::GetLocalFolder(const toml::table& table)
 {
   const auto localPath   = table["local_path"].value<std::string>();
   const auto localFolder = table["local_folder"].value<std::string>();
@@ -285,7 +297,7 @@ LOOTWorker::GetLocalFolder(const toml::table& table)
   }
 
   if (localPath.has_value()) {
-    return std::filesystem::u8path(*localPath).filename();
+    return std::filesystem::u8path(*localPath).filename().string();
   }
 
   return std::nullopt;
@@ -323,7 +335,7 @@ bool LOOTWorker::IsNehrim(const toml::table& table)
 }
 
 bool LOOTWorker::IsEnderal(const toml::table& table,
-                           const std::filesystem::path& expectedLocalFolder)
+                           const std::string& expectedLocalFolder)
 {
   const auto installPath = table["path"].value<std::string>();
 
@@ -392,25 +404,24 @@ std::string LOOTWorker::getOldDefaultRepoUrl(loot::GameId GameId)
   }
 }
 
-bool LOOTWorker::isLocalPath(const std::filesystem::path& location,
-                             const std::filesystem::path& filename)
+bool LOOTWorker::isLocalPath(const std::string& location, const std::string& filename)
 {
-  if (location.string().starts_with("http://") ||
-      location.string().starts_with("https://")) {
+  if (location.starts_with("http://") || location.starts_with("https://")) {
     return false;
   }
 
   // Could be a local path. Only return true if it points to a non-bare
   // Git repository that currently has the given branch checked out and
   // the given filename exists in the repo root.
+  auto locationPath = std::filesystem::u8path(location);
 
-  auto filePath = location / filename;
+  auto filePath = locationPath / std::filesystem::u8path(filename);
 
   if (!std::filesystem::is_regular_file(filePath)) {
     return false;
   }
 
-  auto headFilePath = location / ".git" / "HEAD";
+  auto headFilePath = locationPath / ".git" / "HEAD";
 
   return std::filesystem::is_regular_file(headFilePath);
 }
@@ -559,7 +570,7 @@ int LOOTWorker::run()
     std::locale::global(gen("en.UTF-8"));
   }
 
-  loot::SetLoggingCallback([&](loot::LogLevel level, const char* message) {
+  loot::SetLoggingCallback([&](loot::LogLevel level, std::string_view message) {
     log(level, message);
   });
 
@@ -577,7 +588,7 @@ int LOOTWorker::run()
     m_GameSettings.SetGamePath(m_GamePath);
 
     std::unique_ptr<loot::GameInterface> gameHandle = CreateGameHandle(
-        m_GameSettings.Type(), m_GameSettings.GamePath(), profile);
+        m_GameSettings.Type(), m_GameSettings.GamePath(), profile.string());
 
     if (!GetLOOTAppData().empty()) {
       // Make sure that the LOOT game path exists.
@@ -590,7 +601,7 @@ int LOOTWorker::run()
         }
 
         std::vector<fs::path> legacyGamePaths{GetLOOTAppData() /
-                                              m_GameSettings.FolderName()};
+                                              fs::path(m_GameSettings.FolderName())};
 
         if (m_GameSettings.Id() == loot::GameId::tes5se) {
           // LOOT v0.10.0 used SkyrimSE as its folder name for Skyrim SE, so
@@ -626,49 +637,57 @@ int LOOTWorker::run()
       std::locale::global(gen(m_Language + ".UTF-8"));
     }
 
-    if (true) {
-      progress(Progress::CheckingMasterlistExistence);
-      if (!fs::exists(masterlistPath())) {
-        fs::create_directories(masterlistPath().parent_path());
+    progress(Progress::CheckingMasterlistExistence);
+    if (!fs::exists(masterlistPath())) {
+      if (!m_UpdateMasterlist) {
+        log(loot::LogLevel::error,
+            "Masterlist not found at: " + masterlistPath().string());
+        return 0;
       }
+      fs::create_directories(masterlistPath().parent_path());
+    }
 
+    if (m_UpdateMasterlist) {
       progress(Progress::UpdatingMasterlist);
 
       log(loot::LogLevel::info, "Downloading latest masterlist file from " +
                                     m_GameSettings.MasterlistSource() + " to " +
                                     masterlistPath().string());
       try {
-        GetFile(m_GameSettings.MasterlistSource().c_str(),
-                masterlistPath());
+        GetFile(m_GameSettings.MasterlistSource().c_str(), masterlistPath());
       } catch (const std::exception& ex) {
-        log(loot::LogLevel::error, std::format("GetFile failed: {}", ex.what()));
+        log(loot::LogLevel::error,
+            std::format("Error downloading masterlist: {}", ex.what()));
         return 1;
       }
     }
 
     progress(Progress::LoadingLists);
 
+    gameHandle->GetDatabase().LoadMasterlist(masterlistPath().string());
     fs::path userlist = userlistPath();
-    gameHandle->GetDatabase().LoadLists(
-        masterlistPath(), fs::exists(userlist) ? userlistPath() : fs::path());
+    if (fs::exists(userlist))
+      gameHandle->GetDatabase().LoadUserlist(userlist.string());
 
     progress(Progress::ReadingPlugins);
     gameHandle->LoadCurrentLoadOrderState();
+    auto loadOrder = gameHandle->GetLoadOrder();
     std::vector<std::filesystem::path> pluginsList;
     for (auto plugin : gameHandle->GetLoadOrder()) {
       std::filesystem::path pluginPath(plugin);
       pluginsList.push_back(pluginPath);
     }
+    gameHandle->LoadPlugins(pluginsList, false);
 
     progress(Progress::SortingPlugins);
-    std::vector<std::string> sortedPlugins = gameHandle->SortPlugins(pluginsList);
+    std::vector<std::string> sortedPlugins = gameHandle->SortPlugins(loadOrder);
 
     progress(Progress::WritingLoadorder);
 
     std::ofstream outf(m_PluginListPath);
     if (!outf) {
       log(loot::LogLevel::error,
-          std::format("failed to open {} to rewrite it", m_PluginListPath.string()));
+          "failed to open " + m_PluginListPath + " to rewrite it");
       return 1;
     }
     outf << "# This file was automatically generated by Mod Organizer." << std::endl;
@@ -903,14 +922,7 @@ void LOOTWorker::progress(Progress p)
   std::cout.flush();
 }
 
-std::string escapeNewlines(const std::string& s)
-{
-  auto ss = boost::replace_all_copy(s, "\n", "\\n");
-  boost::replace_all(ss, "\r", "\\r");
-  return ss;
-}
-
-void LOOTWorker::log(loot::LogLevel level, const std::string& message) const
+void LOOTWorker::log(loot::LogLevel level, const std::string_view message) const
 {
   if (level < m_LogLevel) {
     return;
@@ -919,7 +931,7 @@ void LOOTWorker::log(loot::LogLevel level, const std::string& message) const
   const auto ll        = fromLootLogLevel(level);
   const auto levelName = logLevelToString(ll);
 
-  std::cout << "[" << levelName << "] " << escapeNewlines(message) << "\n";
+  std::cout << "[" << levelName << "] " << message << "\n";
   std::cout.flush();
 }
 
