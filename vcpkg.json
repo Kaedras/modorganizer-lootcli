@@ -26,8 +26,8 @@
       },
       {
         "kind": "git",
-        "repository": "https://github.com/ModOrganizer2/vcpkg-registry",
-        "baseline": "8beb2e0efa9c17dd6d17bb05288dd1e40727f673",
+        "repository": "https://github.com/kaedras/vcpkg-registry",
+        "baseline": "3c5da5233d4e1e2fe8507a93a8f1106d79c91284",
         "packages": ["libloot"]
       }
     ]
