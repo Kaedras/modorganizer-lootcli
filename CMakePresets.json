@@ -41,7 +41,7 @@
       "toolset": "v143"
     },
     {
-      "binaryDir": "${sourceDir}/linux-build",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wno-unknown-pragmas",
         "VCPKG_TARGET_TRIPLET": {
