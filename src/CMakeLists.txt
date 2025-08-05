@@ -20,6 +20,12 @@ set_target_properties(libloot::loot PROPERTIES
   MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
 )
 
+if (WIN32)
+	set(OS_SPECIFIC_DIR win32)
+else()
+	set(OS_SPECIFIC_DIR linux)
+endif()
+
 add_executable(lootcli WIN32)
 set_target_properties(lootcli PROPERTIES
 	CXX_STANDARD 20
@@ -30,7 +36,7 @@ target_sources(lootcli
 		game_settings.h
 		lootthread.cpp
 		lootthread.h
-		main.cpp
+		${OS_SPECIFIC_DIR}/main.cpp
 		pch.h
 		version.h
 		version.rc
