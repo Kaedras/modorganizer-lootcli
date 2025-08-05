@@ -777,9 +777,10 @@ LOOTWorker::createJsonReport(loot::GameInterface& game,
   const auto end = std::chrono::high_resolution_clock::now();
 
   set(root, "stats",
-      QJsonObject{{"time", std::chrono::duration_cast<std::chrono::milliseconds>(
-                               end - m_startTime)
-                               .count()},
+      QJsonObject{{"time", static_cast<qint64>(
+                               std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   end - m_startTime)
+                                   .count())},
                   {"lootcliVersion", LOOTCLI_VERSION_STRING},
                   {"lootVersion", QString::fromStdString(loot::GetLiblootVersion())}});
 
