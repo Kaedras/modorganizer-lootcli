@@ -12,6 +12,7 @@ message(STATUS "Qt6 found, building lootcli executable")
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
+find_package(CURL CONFIG REQUIRED)
 
 # avoid CMake error/warning
 set_target_properties(libloot::loot PROPERTIES
@@ -42,7 +43,7 @@ target_compile_definitions(lootcli
 target_include_directories(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 target_precompile_headers(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
 target_link_libraries(lootcli
-    PRIVATE libloot::loot Boost::headers Boost::locale
+    PRIVATE libloot::loot Boost::headers Boost::locale CURL::libcurl
 	tomlplusplus::tomlplusplus Qt6::Core)
 
 if (MSVC)

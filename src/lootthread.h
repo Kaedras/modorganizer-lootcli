@@ -38,7 +38,7 @@ private:
   void progress(Progress p);
   void log(loot::LogLevel level, const std::string_view message) const;
 
-  DWORD GetFile(const WCHAR* szUrl, const CHAR* szFileName);
+  void GetFile(const std::string& url, const std::filesystem::path& fileName);
   void getSettings(const std::filesystem::path& file);
   std::string getOldDefaultRepoUrl(loot::GameId gameType);
   std::optional<std::string> GetLocalFolder(const toml::table& table);
