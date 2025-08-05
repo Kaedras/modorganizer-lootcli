@@ -9,6 +9,13 @@ if (Qt6_FOUND)
 
 message(STATUS "Qt6 found, building lootcli executable")
 
+if (UNIX)
+	find_package(ICU REQUIRED COMPONENTS data uc)
+	find_package(TBB REQUIRED)
+	find_package(spdlog CONFIG REQUIRED)
+	find_package(yaml-cpp CONFIG REQUIRED)
+endif()
+
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
