@@ -1,5 +1,7 @@
 #include "game_settings.h"
 
+#include <QStandardPaths>
+
 namespace fs = std::filesystem;
 namespace loot
 {
@@ -404,15 +406,14 @@ GameSettings& GameSettings::SetGameLocalPath(const std::filesystem::path& path)
 
 GameSettings& GameSettings::SetGameLocalFolder(const std::string& folderName)
 {
-  TCHAR path[MAX_PATH];
+  QStringList paths =
+      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
 
-  HRESULT res = ::SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr,
-                                  SHGFP_TYPE_CURRENT, path);
   fs::path appData;
-  if (res == S_OK) {
-    appData = fs::path(path);
-  } else {
+  if (paths.isEmpty() || paths.first().isEmpty()) {
     appData = fs::path("");
+  } else {
+    appData = QDir(paths.first()).filesystemAbsolutePath();
   }
   gameLocalPath_ = appData / fs::path(folderName);
   return *this;

@@ -3,6 +3,7 @@
 #include "lootthread.h"
 #include "game_settings.h"
 #include "version.h"
+#include <QStandardPaths>
 #include <codecvt>
 #include <fstream>
 #include <strsafe.h>
@@ -112,16 +113,12 @@ void LOOTWorker::setLogLevel(loot::LogLevel level)
 
 fs::path GetLOOTAppData()
 {
-  TCHAR path[MAX_PATH];
-
-  HRESULT res = ::SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr,
-                                  SHGFP_TYPE_CURRENT, path);
-
-  if (res == S_OK) {
-    return fs::path(path) / "LOOT";
-  } else {
+  QStringList paths =
+      QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+  if (paths.isEmpty() || paths.first().isEmpty()) {
     return fs::path("");
   }
+  return QDir(paths.first()).filesystemAbsolutePath() / "LOOT";
 }
 
 fs::path LOOTWorker::gamePath() const
