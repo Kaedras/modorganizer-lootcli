@@ -4,7 +4,6 @@
 #include "game_settings.h"
 #include "version.h"
 #include <QStandardPaths>
-#include <codecvt>
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <fstream>
