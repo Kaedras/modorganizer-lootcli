@@ -47,6 +47,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStandardPaths>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -76,6 +77,10 @@
 #include <io.h>
 #include <shellapi.h>
 #endif
+
+// curl
+#include <curl/curl.h>
+#include <curl/easy.h>
 
 #undef _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #pragma warning(pop)
