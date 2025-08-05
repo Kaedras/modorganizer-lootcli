@@ -1,5 +1,5 @@
 {
-  "dependencies": ["boost-locale", "tomlplusplus", "libloot"],
+  "dependencies": ["boost-locale", "curl", "tomlplusplus", "libloot"],
   "overrides": [
     {
       "name": "tomlplusplus",
