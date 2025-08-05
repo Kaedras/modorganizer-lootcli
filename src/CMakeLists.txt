@@ -1,13 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-# Qt is not required, this allows us to skip building the executable and only create
+# this allows us to skip building the executable and only create
 # the single-header interface when using this as a VCPKG dependency
 
-find_package(Qt6 CONFIG COMPONENTS Core)
-
-if (Qt6_FOUND)
-
-message(STATUS "Qt6 found, building lootcli executable")
+if (NOT HEADER_ONLY)
 
 if (UNIX)
 	find_package(ICU REQUIRED COMPONENTS data uc)
@@ -16,6 +12,7 @@ if (UNIX)
 	find_package(yaml-cpp CONFIG REQUIRED)
 endif()
 
+find_package(Qt6 CONFIG COMPONENTS Core)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
