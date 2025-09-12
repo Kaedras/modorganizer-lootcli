@@ -22,7 +22,7 @@
       {
         "kind": "git",
         "repository": "https://github.com/kaedras/vcpkg-registry",
-        "baseline": "df86478e9a98ffde71b41644d082902fd968cd05",
+        "baseline": "5d1e2cf0d4cd22c5f2308e9722da0b918e129501",
         "packages": ["libloot"]
       }
     ]
