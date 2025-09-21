@@ -19,13 +19,12 @@ find_package(libloot CONFIG REQUIRED)
 find_package(Boost REQUIRED CONFIG COMPONENTS locale)
 find_package(CURL CONFIG REQUIRED)
 
-# avoid CMake error/warning
-set_target_properties(libloot::loot PROPERTIES
-  MAP_IMPORTED_CONFIG_RELEASE RelWithDebInfo
-  MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
-)
-
 if (WIN32)
+	# avoid CMake error/warning
+	set_target_properties(libloot::loot PROPERTIES
+	  MAP_IMPORTED_CONFIG_RELEASE RelWithDebInfo
+	  MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
+	)
 	set(OS_SPECIFIC_DIR win32)
 else()
 	set(OS_SPECIFIC_DIR linux)
