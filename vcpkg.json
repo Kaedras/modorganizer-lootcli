@@ -1,5 +1,14 @@
 {
-  "dependencies": ["boost-locale", "curl", "tomlplusplus", "libloot"],
+  "dependencies": ["boost-locale", "curl", "tomlplusplus", "libloot",
+    {
+      "name": "icu",
+      "platform": "linux"
+    },
+    {
+      "name": "tbb",
+      "platform": "linux"
+    }
+  ],
   "overrides": [
     {
       "name": "tomlplusplus",
