@@ -47,10 +47,6 @@ target_sources(lootcli
 		version.rc
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/lootcli/lootcli.h
 )
-target_compile_definitions(lootcli
-	PRIVATE
-	_UNICODE UNICODE
-	_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
 target_include_directories(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 target_precompile_headers(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
 target_link_libraries(lootcli
@@ -69,7 +65,7 @@ if (MSVC)
 		PRIVATE
 		$<$<CONFIG:RelWithDebInfo>:/LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF>
 	)
-	target_compile_definitions(lootcli PRIVATE _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
+	target_compile_definitions(lootcli PRIVATE _UNICODE UNICODE _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
 
 	set_target_properties(lootcli PROPERTIES VS_STARTUP_PROJECT lootcli)
 endif()
