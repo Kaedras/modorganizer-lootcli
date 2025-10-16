@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
   if (argv) {
     for (int i = 0; i < argc; ++i) {
-      arguments.push_back(argv[0]);
+      arguments.push_back(argv[i]);
     }
   }
 
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     return worker.run();
   } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what();
+    std::cerr << "Error: " << e.what() << "\n";
     return 1;
   }
 }
