@@ -20,17 +20,6 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y autoconf-archive
 
-      # this step has been copied from https://github.com/loot/libloot/blob/0.26.3/.github/workflows/ci.yml
-      - name: Install cbindgen
-        if: runner.os == 'Linux'
-        run: |
-          wget https://github.com/mozilla/cbindgen/releases/download/0.28.0/cbindgen
-          BIN_PATH="$HOME/.local/bin/"
-          mkdir -p "$BIN_PATH"
-          mv cbindgen "$BIN_PATH"
-          chmod +x "$BIN_PATH/cbindgen"
-          echo "$BIN_PATH" >> "$GITHUB_PATH"
-
       - name: Build LootCLI
         uses: Kaedras/build-with-mob-action@master
         with:
