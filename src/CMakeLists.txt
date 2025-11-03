@@ -5,14 +5,6 @@ cmake_minimum_required(VERSION 3.16)
 
 if (NOT HEADER_ONLY)
 
-if (UNIX)
-	find_package(ICU REQUIRED COMPONENTS data uc)
-	find_package(TBB CONFIG REQUIRED)
-	find_package(spdlog CONFIG REQUIRED)
-	find_package(yaml-cpp CONFIG REQUIRED)
-	find_package(Boost REQUIRED CONFIG COMPONENTS crc graph)
-endif()
-
 find_package(Qt6 CONFIG COMPONENTS Core)
 find_package(tomlplusplus CONFIG REQUIRED)
 find_package(libloot CONFIG REQUIRED)

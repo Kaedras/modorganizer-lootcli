@@ -629,7 +629,7 @@ int LOOTWorker::run()
       auto lootGamePath = gamePath();
       if (!fs::is_directory(lootGamePath)) {
         if (fs::exists(lootGamePath)) {
-          throw loot::FileAccessError(
+          throw std::runtime_error(
               "Could not create LOOT folder for game, the path exists but is not "
               "a directory");
         }
@@ -1011,8 +1011,7 @@ lootcli::LogLevels fromLootLogLevel(loot::LogLevel level)
   case L::warning:
     return LC::Warning;
 
-  case L::error:  // fall-through
-  case L::fatal:
+  case L::error:
     return LC::Error;
 
   default:

@@ -1,14 +1,5 @@
 {
-  "dependencies": ["boost-locale", "curl", "tomlplusplus", "libloot",
-    {
-      "name": "icu",
-      "platform": "linux"
-    },
-    {
-      "name": "tbb",
-      "platform": "linux"
-    }
-  ],
+  "dependencies": ["boost-locale", "curl", "tomlplusplus", "libloot" ],
   "overrides": [
     {
       "name": "tomlplusplus",
@@ -31,7 +22,7 @@
       {
         "kind": "git",
         "repository": "https://github.com/Kaedras/vcpkg-registry",
-        "baseline": "e23ae6fb9f5c52ded0cd82b54686346d2b2a8906",
+        "baseline": "79833350aece2edd54393468c1271b7988a155ca",
         "packages": ["libloot"]
       }
     ]
