@@ -61,10 +61,14 @@ if (MSVC)
 	set_target_properties(lootcli PROPERTIES VS_STARTUP_PROJECT lootcli)
 endif()
 
-install(FILES
-	$<TARGET_FILE:lootcli>
-	$<TARGET_FILE:libloot::loot>
-DESTINATION bin/loot)
+if(UNIX)
+	set_target_properties(lootcli PROPERTIES INSTALL_RPATH ".")
+	install(FILES $<TARGET_FILE:libloot::loot> DESTINATION bin/loot RENAME libloot.so.0)
+else()
+	install(FILES $<TARGET_FILE:libloot::loot> DESTINATION bin/loot)
+endif()
+
+install(TARGETS lootcli DESTINATION bin/loot)
 
 endif()
 
