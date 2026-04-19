@@ -19,7 +19,7 @@ namespace lootcli
 {
 static const std::set<std::string>
     oldDefaultBranches({"master", "v0.7", "v0.8", "v0.10", "v0.13", "v0.14", "v0.15",
-                        "v0.17", "v0.18", "v0.21"});
+                        "v0.17", "v0.18", "v0.21", "v0.26"});
 static const std::regex GITHUB_REPO_URL_REGEX =
     std::regex(R"(^https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$)",
                std::regex::ECMAScript | std::regex::icase);
@@ -259,7 +259,7 @@ void LOOTWorker::getSettings(const fs::path& file)
 
           auto path = gameTable["path"].value<std::string>();
           if (path) {
-            newSettings.SetGamePath(std::filesystem::u8path(*path));
+            newSettings.SetGamePath(std::filesystem::path(*path));
           }
 
           auto localPath   = gameTable["local_path"].value<std::string>();
@@ -268,7 +268,7 @@ void LOOTWorker::getSettings(const fs::path& file)
             throw std::runtime_error(
                 "Game settings have local_path and local_folder set, use only one.");
           } else if (localPath) {
-            newSettings.SetGameLocalPath(std::filesystem::u8path(*localPath));
+            newSettings.SetGameLocalPath(std::filesystem::path(*localPath));
           } else if (localFolder) {
             newSettings.SetGameLocalFolder(*localFolder);
           }
@@ -297,7 +297,7 @@ std::optional<std::string> LOOTWorker::GetLocalFolder(const toml::table& table)
   }
 
   if (localPath.has_value()) {
-    return std::filesystem::u8path(*localPath).filename().string();
+    return std::filesystem::path(*localPath).filename().string();
   }
 
   return std::nullopt;
@@ -308,7 +308,7 @@ bool LOOTWorker::IsNehrim(const toml::table& table)
   const auto installPath = table["path"].value<std::string>();
 
   if (installPath.has_value() && !installPath.value().empty()) {
-    const auto path = std::filesystem::u8path(installPath.value());
+    const auto path = std::filesystem::path(installPath.value());
     if (std::filesystem::exists(path)) {
       return std::filesystem::exists(path / "NehrimLauncher.exe");
     }
@@ -340,7 +340,7 @@ bool LOOTWorker::IsEnderal(const toml::table& table,
   const auto installPath = table["path"].value<std::string>();
 
   if (installPath.has_value() && !installPath.value().empty()) {
-    const auto path = std::filesystem::u8path(installPath.value());
+    const auto path = std::filesystem::path(installPath.value());
     if (std::filesystem::exists(path)) {
       return std::filesystem::exists(path / "Enderal Launcher.exe");
     }
@@ -414,9 +414,9 @@ bool LOOTWorker::isLocalPath(const std::string& location, const std::string& fil
   // Could be a local path. Only return true if it points to a non-bare
   // Git repository that currently has the given branch checked out and
   // the given filename exists in the repo root.
-  auto locationPath = std::filesystem::u8path(location);
+  auto locationPath = std::filesystem::path(location);
 
-  auto filePath = locationPath / std::filesystem::u8path(filename);
+  auto filePath = locationPath / std::filesystem::path(filename);
 
   if (!std::filesystem::is_regular_file(filePath)) {
     return false;
@@ -474,7 +474,7 @@ LOOTWorker::migrateMasterlistRepoSettings(loot::GameId GameId, std::string url,
 
   auto filename = "masterlist.yaml";
   if (isLocalPath(url, filename)) {
-    auto localRepoPath = std::filesystem::u8path(url);
+    auto localRepoPath = std::filesystem::path(url);
     if (!isBranchCheckedOut(localRepoPath, branch)) {
       log(loot::LogLevel::warning,
           "The URL " + url +
@@ -770,7 +770,8 @@ LOOTWorker::createJsonReport(loot::GameInterface& game,
 {
   QJsonObject root;
 
-  set(root, "messages", createMessages(game.GetDatabase().GetGeneralMessages(true)));
+  set(root, "messages",
+      createMessages(game.GetDatabase().GetGeneralMessages(true, true)));
   set(root, "plugins", createPlugins(game, sortedPlugins));
 
   const auto end = std::chrono::high_resolution_clock::now();

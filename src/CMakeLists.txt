@@ -13,7 +13,7 @@ find_package(CURL CONFIG REQUIRED)
 
 if (WIN32)
 	# avoid CMake error/warning
-	set_target_properties(libloot::loot PROPERTIES
+	set_target_properties(libloot::libloot PROPERTIES
 	  MAP_IMPORTED_CONFIG_RELEASE RelWithDebInfo
 	  MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
 	)
@@ -41,7 +41,7 @@ target_sources(lootcli
 target_include_directories(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 target_precompile_headers(lootcli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
 target_link_libraries(lootcli
-    PRIVATE libloot::loot Boost::headers Boost::locale CURL::libcurl
+    PRIVATE libloot::libloot Boost::headers Boost::locale CURL::libcurl
 	tomlplusplus::tomlplusplus Qt6::Core)
 
 if (MSVC)
@@ -63,9 +63,9 @@ endif()
 
 if(UNIX)
 	set_target_properties(lootcli PROPERTIES INSTALL_RPATH ".")
-	install(FILES $<TARGET_FILE:libloot::loot> DESTINATION bin/loot RENAME libloot.so.0)
+	install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION bin/loot RENAME libloot.so.0)
 else()
-	install(FILES $<TARGET_FILE:libloot::loot> DESTINATION bin/loot)
+	install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION bin/loot)
 endif()
 
 install(TARGETS lootcli DESTINATION bin/loot)
