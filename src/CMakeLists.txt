@@ -59,6 +59,12 @@ if (MSVC)
 	target_compile_definitions(lootcli PRIVATE _UNICODE UNICODE _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
 
 	set_target_properties(lootcli PROPERTIES VS_STARTUP_PROJECT lootcli)
+else()
+	target_compile_options(lootcli PRIVATE -Wall -Wextra -Wpedantic -Wno-unknown-pragmas)
+	target_link_options(lootcli
+		PRIVATE
+		$<$<CONFIG:RelWithDebInfo>:-flto=auto>
+	)
 endif()
 
 if(UNIX)
