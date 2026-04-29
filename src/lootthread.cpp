@@ -509,8 +509,9 @@ LOOTWorker::migrateMasterlistRepoSettings(loot::GameId GameId, std::string url,
 std::string LOOTWorker::migrateMasterlistSource(const std::string& source)
 {
   static const std::vector<std::string> officialMasterlistRepos = {
-      "morrowind", "oblivion",  "skyrim",   "skyrimse",   "skyrimvr",
-      "fallout3",  "falloutnv", "fallout4", "fallout4vr", "enderal"};
+      "morrowind",  "oblivion", "skyrim",    "skyrimse",
+      "skyrimvr",   "fallout3", "falloutnv", "fallout4",
+      "fallout4vr", "enderal",  "starfield", "oblivion-remastered"};
 
   for (const auto& repo : officialMasterlistRepos) {
     for (const auto& branch : oldDefaultBranches) {

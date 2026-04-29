@@ -267,7 +267,6 @@ std::string GetDefaultMasterlistRepositoryName(const GameId gameId)
     return "morrowind";
   case GameId::tes4:
   case GameId::nehrim:
-  case GameId::oblivionRemastered:
     return "oblivion";
   case GameId::tes5:
     return "skyrim";
@@ -288,6 +287,8 @@ std::string GetDefaultMasterlistRepositoryName(const GameId gameId)
     return "fallout4vr";
   case GameId::starfield:
     return "starfield";
+  case GameId::oblivionRemastered:
+    return "oblivion-remastered";
   default:
     throw std::logic_error("Unrecognised game type");
   }
