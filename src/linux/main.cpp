@@ -1,4 +1,5 @@
 #include "../lootthread.h"
+#include <boost/lexical_cast.hpp>
 #include <lootcli/lootcli.h>
 
 #include <iostream>

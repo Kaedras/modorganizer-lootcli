@@ -1,6 +1,8 @@
 #include "game_settings.h"
 
+#include <QDir>
 #include <QStandardPaths>
+#include <boost/algorithm/string.hpp>
 
 namespace fs = std::filesystem;
 namespace loot

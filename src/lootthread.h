@@ -3,7 +3,11 @@
 
 #include "game_settings.h"
 #include "loot/database_interface.h"
+#include <QJsonArray>
+#include <loot/api.h>
 #include <lootcli/lootcli.h>
+#include <mutex>
+#include <toml++/toml.h>
 
 namespace loot
 {

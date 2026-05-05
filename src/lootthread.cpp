@@ -3,10 +3,15 @@
 #include "lootthread.h"
 #include "game_settings.h"
 #include "version.h"
+#include <QDir>
+#include <QJsonObject>
 #include <QStandardPaths>
+#include <boost/algorithm/string.hpp>
+#include <boost/locale.hpp>
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <fstream>
+#include <iostream>
 #include <mutex>
 
 // using namespace loot;
