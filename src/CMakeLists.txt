@@ -68,13 +68,19 @@ else()
 endif()
 
 if(UNIX)
-	set_target_properties(lootcli PROPERTIES INSTALL_RPATH ".")
-	install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION bin/loot RENAME libloot.so.0)
+	if(DEFINED VCPKG_TARGET_TRIPLET)
+		set_target_properties(lootcli PROPERTIES INSTALL_RPATH ".")
+		install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION ${CMAKE_INSTALL_BINDIR}/loot RENAME libloot.so.0)
+	endif()
 else()
-	install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION bin/loot)
+	install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION ${CMAKE_INSTALL_BINDIR}/loot)
 endif()
 
-install(TARGETS lootcli DESTINATION bin/loot)
+if(DEFINED VCPKG_TARGET_TRIPLET)
+	install(TARGETS lootcli DESTINATION ${CMAKE_INSTALL_BINDIR}/loot)
+else()
+	install(TARGETS lootcli DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 endif()
 
@@ -90,5 +96,5 @@ install(TARGETS lootcli-header EXPORT lootcliHeaderTargets FILE_SET HEADERS)
 install(EXPORT lootcliHeaderTargets
 	FILE mo2-lootcli-header-targets.cmake
 	NAMESPACE mo2::
-	DESTINATION lib/cmake/mo2-lootcli-header
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mo2-lootcli-header
 )
