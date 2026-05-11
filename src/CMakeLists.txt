@@ -75,7 +75,7 @@ endif()
 
 if(UNIX)
 	if(DEFINED VCPKG_TARGET_TRIPLET)
-		set_target_properties(lootcli PROPERTIES INSTALL_RPATH ".")
+		set_target_properties(lootcli PROPERTIES INSTALL_RPATH "$ORIGIN")
 		install(FILES $<TARGET_FILE:libloot::libloot> DESTINATION ${CMAKE_INSTALL_BINDIR}/loot RENAME libloot.so.0)
 	endif()
 else()
