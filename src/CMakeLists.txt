@@ -23,9 +23,6 @@ if (WIN32)
 	  MAP_IMPORTED_CONFIG_RELEASE RelWithDebInfo
 	  MAP_IMPORTED_CONFIG_MINSIZEREL RelWithDebInfo
 	)
-	set(OS_SPECIFIC_DIR win32)
-else()
-	set(OS_SPECIFIC_DIR linux)
 endif()
 
 add_executable(lootcli WIN32)
@@ -38,7 +35,7 @@ target_sources(lootcli
 		game_settings.h
 		lootthread.cpp
 		lootthread.h
-		${OS_SPECIFIC_DIR}/main.cpp
+		main.cpp
 		pch.h
 		version.h
 		version.rc

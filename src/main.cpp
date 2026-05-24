@@ -1,8 +1,5 @@
-#include "../lootthread.h"
-#include <boost/lexical_cast.hpp>
+#include "lootthread.h"
 #include <lootcli/lootcli.h>
-
-#include <iostream>
 
 using namespace std;
 
@@ -48,6 +45,27 @@ loot::LogLevel getLogLevel(const std::vector<std::string>& arguments)
   return lootcli::toLootLogLevel(level);
 }
 
+#ifdef _WIN32
+int wWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
+{
+  _setmode(_fileno(stdout), _O_BINARY);
+  setlocale(LC_ALL, "en.UTF-8");
+
+  std::vector<std::string> arguments;
+  int argc;
+  LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+  if (argv) {
+    for (int i = 0; i < argc; ++i) {
+      size_t num_converted;
+      std::vector<char> arg(wcslen(argv[i]) * sizeof(wchar_t) + 1);
+
+      wcstombs_s(&num_converted, &(arg[0]), arg.size(), argv[i], arg.size() - 1);
+
+      arguments.push_back(&(arg[0]));
+    }
+  }
+#else
 int main(int argc, char* argv[])
 {
   setlocale(LC_ALL, "en.UTF-8");
@@ -56,9 +74,10 @@ int main(int argc, char* argv[])
 
   if (argv) {
     for (int i = 0; i < argc; ++i) {
-      arguments.push_back(argv[i]);
+      arguments.emplace_back(argv[i]);
     }
   }
+#endif
 
   // design rationale: this was designed to have the actual loot stuff run in a separate
   // thread. That turned out to be unnecessary atm.
@@ -69,8 +88,12 @@ int main(int argc, char* argv[])
     worker.setUpdateMasterlist(!getParameter<bool>(arguments, "skipUpdateMasterlist"));
     worker.setGame(getParameter<std::string>(arguments, "game"));
     worker.setGamePath(getParameter<std::string>(arguments, "gamePath"));
-    worker.setPluginListPath(getParameter<std::string>(arguments, "pluginListPath"));
-    worker.setOutput(getParameter<std::string>(arguments, "out"));
+
+    const auto pluginListPath = getParameter<std::string>(arguments, "pluginListPath");
+    worker.setPluginListPath(pluginListPath);
+    worker.setReportOutputPath(getParameter<std::string>(arguments, "out"));
+    worker.setSortedPluginListOutputPath(getOptionalParameter<std::string>(
+        arguments, "pluginListOutputPath", pluginListPath));
     worker.setLogLevel(getLogLevel(arguments));
 
     const auto lang = getOptionalParameter<std::string>(arguments, "language", "");
@@ -80,7 +103,7 @@ int main(int argc, char* argv[])
 
     return worker.run();
   } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << "\n";
+    std::cerr << "Error: " << e.what();
     return 1;
   }
 }
